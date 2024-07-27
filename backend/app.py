@@ -34,7 +34,10 @@ def background_thread():
         socketio.sleep(1)
         send_sessions()
 
-
+@app.route("/")
+def index():
+    # return hello world
+    return "Hello World"
 @socketio.event
 def connect():
     print('[+] Client connected')
@@ -118,4 +121,5 @@ def default(t):
 
 if __name__ == '__main__':
     app.debug = False
-    socketio.run(app, port=8001, host="0.0.0.0")
+
+    socketio.run(app, port=23000, host="0.0.0.0",allow_unsafe_werkzeug=True)

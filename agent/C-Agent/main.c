@@ -10,9 +10,9 @@ void xor (char *buf, int bufsize);
 int main()
 {
     char *user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36";
-    char *url = "192.168.17.131";
-    char *path = "/test";
-    int port = 8001;
+    char *url = "127.0.0.1";
+    char *path = "/api/v1/uptime";
+    int port = 23000;
 
     char username[256];
     DWORD username_len = 256;

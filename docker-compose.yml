@@ -1,0 +1,16 @@
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "127.0.0.1:23001:23001"
+    volumes:
+      - ./frontend/build:/python-docker/build
+  backend:
+    build: ./backend
+    ports:
+      - "127.0.0.1:23000:23000" 
+    volumes:
+     - ./backend:/python-docker
+
+    depends_on:
+      - frontend

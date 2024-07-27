@@ -1,0 +1,29 @@
+[package]
+name = "RustC2"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+reqwest = { version = "0.11", features = ["json"] }
+tokio = { version = "1", features = ["full"] }
+base64 = "0.13.0"
+winreg = "0.52"
+kernel32-sys = "0.2.2"
+winapi = {version = "0.3.8", features=[
+    "winnt",
+    "memoryapi",
+    "errhandlingapi",
+    "processthreadsapi",
+    "synchapi",
+    "winbase",
+    "handleapi",
+    "libloaderapi",
+    "winuser"
+]}
+argparse = "0.2.2"
+clap = "3.1.5"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = 'abort'
